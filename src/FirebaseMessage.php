@@ -290,13 +290,25 @@ class FirebaseMessage
     public function formatData()
     {
         $payload = [
-            'priority' => $this->priority,
+            'android' => [
+                'priority' => $this->priority,
+            ],
+            'apns' => [
+                'payload' => [
+                    'aps' => [
+                        'priority' => $this->priority === 'high' ? 10 : 5,
+                    ],
+                ],
+            ]
+        ];
+        $message = [
+            'message' => &$payload
         ];
 
         if (is_array($this->to)) {
             $payload['registration_ids'] = $this->to;
         } else {
-            $payload['to'] = $this->to;
+            $payload['token'] = $this->to;
         }
 
         if (isset($this->data) && count($this->data)) {
@@ -331,6 +343,6 @@ class FirebaseMessage
             $payload['restricted_package_name'] = $this->packageName;
         }
 
-        return \GuzzleHttp\json_encode($payload);
+        return $message;
     }
 }
