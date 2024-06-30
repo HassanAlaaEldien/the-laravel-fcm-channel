@@ -18,7 +18,7 @@ class FirebaseMessage
     /**
      * @var array
      */
-    private $notification   = [];
+    private $notification = [];
     /**
      * @var array
      */
@@ -87,7 +87,7 @@ class FirebaseMessage
      * @param string
      * @return $this
      */
-    public function title(String $title)
+    public function title(string $title)
     {
         $this->notification['title'] = $title;
 
@@ -99,7 +99,7 @@ class FirebaseMessage
      * @param string
      * @return $this
      */
-    public function body(String $body)
+    public function body(string $body)
     {
         $this->notification['body'] = $body;
 
@@ -285,7 +285,7 @@ class FirebaseMessage
     }
 
     /**
-     * @return string
+     * @return array[]
      */
     public function formatData()
     {
@@ -306,13 +306,17 @@ class FirebaseMessage
         ];
 
         if (is_array($this->to)) {
-            $payload['registration_ids'] = $this->to;
+            $payload['token'] = implode(',', $this->to);
         } else {
             $payload['token'] = $this->to;
         }
 
         if (isset($this->data) && count($this->data)) {
-            $payload['data'] = $this->data;
+            $filteredData = [];
+            foreach ($this->data as $key => $value) {
+                $filteredData[$key] = is_array($value) ? json_encode($value) : (string)$value;
+            }
+            $payload['data'] = $filteredData;
         }
 
         if (isset($this->notification) && count($this->notification)) {
