@@ -2,8 +2,10 @@
 
 namespace Yusef\Channels;
 
+use Google\Client as GoogleClient;
 use GuzzleHttp\Client;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Http;
 
 /**
  * Class FirebaseChannel
@@ -12,21 +14,31 @@ use Illuminate\Notifications\Notification;
 class FirebaseChannel
 {
     /**
-     * @const The API URL for Firebase
+     * const Google Client Scope
      */
-    const API_URI = 'https://fcm.googleapis.com/fcm/send';
+    const MESSAGIN_SCOPE = 'https://www.googleapis.com/auth/firebase.messaging';
 
     /**
-     * @var Client
+     * @var GoogleClient
      */
-    private $client;
+    private $googleClient;
 
     /**
-     * @param Client $client
+     * @var mixed
      */
-    public function __construct(Client $client)
+    protected $projectId;
+
+    /**
+     *
+     */
+    public function __construct()
     {
-        $this->client = $client;
+        $this->googleClient = new GoogleClient();
+        $this->googleClient->useApplicationDefaultCredentials();
+        $this->googleClient->addScope(self::MESSAGIN_SCOPE);
+
+        $serviceAccount = json_decode(file_get_contents($this->getServiceAccountPath()), true);
+        $this->projectId = $serviceAccount['project_id'];
     }
 
     /**
@@ -46,21 +58,21 @@ class FirebaseChannel
             $message->to($to);
         }
 
-        $this->client->request('post', self::API_URI, [
-            'verify' => false,
-            'headers' => [
-                'Authorization' => 'key=' . $this->getApiKey(),
-                'Content-Type'  => 'application/json',
-            ],
-            'body' => $message->formatData(),
-        ]);
+        $url = "https://fcm.googleapis.com/v1/projects/{$this->projectId}/messages:send";
+
+        $accessToken = $this->googleClient->fetchAccessTokenWithAssertion()['access_token'];
+
+        Http::withHeaders([
+            'Authorization' => 'Bearer ' . $accessToken,
+            'Content-Type' => 'application/json',
+        ])->post($url, $message->formatData());
     }
 
     /**
      * @return string
      */
-    private function getApiKey()
+    private function getServiceAccountPath()
     {
-        return config('services.fcm.key');
+        return config('services.fcm.service_account_path');
     }
 }
