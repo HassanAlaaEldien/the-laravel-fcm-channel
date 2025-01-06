@@ -303,7 +303,7 @@ class FirebaseMessage
         ];
 
         if (isset($this->notification['icon']) && $this->notification['icon']){
-            $payload['android']['notification']['imageUrl'] = $this->notification['icon'];
+            $payload['android']['notification']['image'] = $this->notification['icon'];
             $payload['apns']['fcm_options']['image'] = $this->notification['icon'];
         }
 
@@ -326,6 +326,7 @@ class FirebaseMessage
         }
 
         if (isset($this->notification) && count($this->notification)) {
+            unset($this->notification['icon']);
             $payload['notification'] = $this->notification;
         }
 
