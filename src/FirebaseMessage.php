@@ -135,6 +135,20 @@ class FirebaseMessage
     }
 
     /**
+     * The FCM notification icon.
+     * @param string
+     * @return $this
+     */
+    public function image($image = null)
+    {
+        if ($image) {
+            $this->notification['image'] = $image;
+        }
+
+        return $this;
+    }
+
+    /**
      * The FCM notification click action.
      * @param string
      * @return $this
@@ -301,6 +315,10 @@ class FirebaseMessage
                 ],
             ]
         ];
+
+        if (isset($this->notification['image']) && $this->notification['image'])
+            $payload['apns']['fcm_options']['image'] = $this->notification['image'];
+
         $message = [
             'message' => &$payload
         ];
